@@ -70,8 +70,11 @@
 		if(chatInput.value[0] === '/')
 			socket.emit('evalServer',chatInput.value.slice(1));
 		else
-			socket.emit('sendMsgToServer',chatInput.value);
-		chatInput.value = '';		
+			socket.emit('sendMsgToServer',{
+				msg:chatInput.value,
+				name:selfName,
+			});
+		chatInput.value = '';	
 	}
 	
 	//game
@@ -117,10 +120,13 @@
 
 	
 	var selfId = null;
+	var selfName = null;
 
 	socket.on('init',function(data){	
 		if(data.selfId)
 			selfId = data.selfId;
+		if(data.selfName)
+			selfName = data.selfName;
 		//{ player : [{id:123,number:'1'},{id:1,number:'2'}]}
 		for(var i = 0 ; i < data.player.length; i++){
 			new Player(data.player[i]);

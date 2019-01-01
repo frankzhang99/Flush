@@ -15,10 +15,13 @@ console.log("Server started.");
 
 var SOCKET_LIST = {};
 
-var Player = function(id) {
+var Player = function(id, name) {
 	var self = {};
 	self.id = id;
 	self.number = Math.floor(10 * Math.random());;
+	self.name = name;
+	self.numCards = 4;
+
 
 	self.update = function() {
 		//TODO
@@ -28,13 +31,15 @@ var Player = function(id) {
 	self.getInitPack = function() {
 		return {
 			id:self.id,
-			number:self.number,
+			name:self.name,
+			numCards:self.numCards,
 		}
 	}
 	self.getUpdatePack = function() {
 		return {
 			id:self.id,
-			number:self.number,
+			name:self.name,
+			numCards:self.numCards,
 		}
 	}
 
@@ -43,11 +48,12 @@ var Player = function(id) {
 	return self;
 }
 Player.list = {};
-Player.onConnect = function(socket){
-	var player = Player(socket.id);
+Player.onConnect = function(socket, name){
+	var player = Player(socket.id, name);
 
 	socket.emit('init', {
 		selfId:socket.id,
+		selfName:name,
 		player:Player.getAllInitPack(),
 	})
 }
@@ -130,7 +136,18 @@ var getRandDeck = function () {
 	return deck;
 }
 
-var testdeck = getRandDeck();
+//game deck and discard pile
+var deck;
+var discard;
+var orderedPlayers = new Array();
+
+var newGame = function() {
+	deck = getRandDeck();
+	discard = new Array();
+	for(var i in Player.list)
+		orderedPlayers.push(Player.list[i]);
+	
+};
 
 
 var io = require('socket.io')(serv,{});
@@ -140,7 +157,7 @@ io.sockets.on('connection', function(socket){
 	
 	socket.on('signIn',function(data){
 		if(isValidPassword(data)){
-			Player.onConnect(socket);
+			Player.onConnect(socket, data.username);
 			socket.emit('signInResponse',{success:true});
 		} else {
 			socket.emit('signInResponse',{success:false});	
@@ -160,9 +177,8 @@ io.sockets.on('connection', function(socket){
 		Player.onDisconnect(socket);
 	});
 	socket.on('sendMsgToServer',function(data){
-		var playerName = ("" + socket.id).slice(2,7);
 		for(var i in SOCKET_LIST){
-			SOCKET_LIST[i].emit('addToChat',playerName + ': ' + data);
+			SOCKET_LIST[i].emit('addToChat',data.name + ': ' + data.msg);
 		}
 	});
 	
@@ -175,7 +191,10 @@ io.sockets.on('connection', function(socket){
 
 
 	//game
-	// socket.on('startGame')
+	socket.on('startGame', function() {
+		console.log("Game Start");
+		newGame();
+	});
 });
 
 
