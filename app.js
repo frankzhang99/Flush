@@ -158,6 +158,7 @@ var getDeck = function(){
 
 	return deck;
 }
+
 var getRandDeck = function () {
 	var deck = getDeck();
 
