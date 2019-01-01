@@ -1,0 +1,154 @@
+<div id="signDiv">
+	Username: <input id="signDiv-username" type="text"></input><br>
+	Password: <input id="signDiv-password" type="password"></input>
+	<button id="signDiv-signIn">Sign In</button>
+	<button id="signDiv-signUp">Sign Up</button>
+</div>
+
+<div id="gameDiv" style="display:none;">
+	<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
+	<div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
+		<div>Hello!</div>
+	</div>
+
+	<form id="chat-form">
+		<input id="chat-input" type="text" style="width:500px"></input>
+	</form>
+</div>
+
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script>
+	var WIDTH = 500;
+	var HEIGHT = 500;
+	var socket = io();
+	
+	//sign
+	var signDiv = document.getElementById('signDiv');
+	var signDivUsername = document.getElementById('signDiv-username');
+	var signDivSignIn = document.getElementById('signDiv-signIn');
+	var signDivSignUp = document.getElementById('signDiv-signUp');
+	var signDivPassword = document.getElementById('signDiv-password');
+	
+	signDivSignIn.onclick = function(){
+		socket.emit('signIn',{username:signDivUsername.value,password:signDivPassword.value});
+	}
+	// signDivSignUp.onclick = function(){
+	// 	socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
+	// }
+	socket.on('signInResponse',function(data){
+		if(data.success){
+			signDiv.style.display = 'none';
+			gameDiv.style.display = 'inline-block';
+		} else
+			alert("Sign in unsuccessul.");
+	});
+	socket.on('signUpResponse',function(data){
+		if(data.success){
+			alert("Sign up successul.");
+		} else
+			alert("Sign up unsuccessul.");
+	});
+
+	//chat
+	var chatText = document.getElementById('chat-text');
+	var chatInput = document.getElementById('chat-input');
+	var chatForm = document.getElementById('chat-form');
+	
+	socket.on('addToChat',function(data){
+		chatText.innerHTML += '<div>' + data + '</div>';
+	});
+	socket.on('evalAnswer',function(data){
+		console.log(data);
+	});
+	
+	
+	chatForm.onsubmit = function(e){
+		e.preventDefault();
+		if(chatInput.value[0] === '/')
+			socket.emit('evalServer',chatInput.value.slice(1));
+		else
+			socket.emit('sendMsgToServer',chatInput.value);
+		chatInput.value = '';		
+	}
+	
+	//game
+	var Img = {};
+	Img.player = new Image();
+	Img.player.src = '/client/img/player.png';
+	Img.map = new Image();
+	Img.map.src = '/client/img/map.png';
+	
+	var ctx = document.getElementById("ctx").getContext("2d");
+	ctx.font = '30px Arial';
+	
+	var Player = function(initPack){
+		var self = {};
+		self.id = initPack.id;
+		self.number = initPack.number;
+		
+		self.draw = function(){	
+			var x = 250;
+			var y = 250;
+			
+			var width = Img.player.width*2;
+			var height = Img.player.height*2;
+			
+			ctx.drawImage(Img.player,
+				0,0,Img.player.width,Img.player.height,
+				x-width/2,y-height/2,width,height);
+			
+			//ctx.fillText(self.score,self.x,self.y-60);
+		}
+		
+		Player.list[self.id] = self;
+		
+		
+		return self;
+	}
+	Player.list = {};
+
+	
+	var selfId = null;
+
+	socket.on('init',function(data){	
+		if(data.selfId)
+			selfId = data.selfId;
+		//{ player : [{id:123,number:'1'},{id:1,number:'2'}]}
+		for(var i = 0 ; i < data.player.length; i++){
+			new Player(data.player[i]);
+		}
+	});
+	
+	socket.on('update',function(data){
+		
+	});
+	
+	socket.on('remove',function(data){
+		//{player:[12323],bullet:[12323,123123]}
+		for(var i = 0 ; i < data.player.length; i++){
+			delete Player.list[data.player[i]];
+		}
+	});
+	
+	setInterval(function(){
+		if(!selfId)
+			return;
+		ctx.clearRect(0,0,500,500);
+		drawMap();
+		for(var i in Player.list)
+			Player.list[i].draw();
+	},40);
+	
+	var drawMap = function(){
+		ctx.drawImage(Img.map,0,0);
+	}
+	
+	
+	
+</script>
+
+
+
+
+
