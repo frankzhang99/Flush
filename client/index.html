@@ -15,6 +15,8 @@
 	<form id="chat-form">
 		<input id="chat-input" type="text" style="width:500px"></input>
 	</form>
+
+	<button id="gameDiv-startGame">Start Game</button>
 </div>
 
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -78,6 +80,11 @@
 	Img.player.src = '/client/img/player.png';
 	Img.map = new Image();
 	Img.map.src = '/client/img/map.png';
+	var gameDivStartGame = document.getElementById('gameDiv-startGame');
+	
+	gameDivStartGame.onclick = function(){
+		socket.emit('startGame');
+	}
 	
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
