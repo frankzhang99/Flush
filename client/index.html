@@ -17,6 +17,7 @@
 	</form>
 
 	<button id="gameDiv-startGame">Start Game</button>
+	<button id="gameDiv-test">test</button>
 </div>
 
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -84,10 +85,15 @@
 	Img.map = new Image();
 	Img.map.src = '/client/img/map.png';
 	var gameDivStartGame = document.getElementById('gameDiv-startGame');
+	var gameDivTest = document.getElementById('gameDiv-test');
 	
 	gameDivStartGame.onclick = function(){
 		socket.emit('startGame');
 	}
+	gameDivTest.onclick = function(){
+		socket.emit('randomPack');
+	}
+
 	
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';

@@ -104,8 +104,25 @@ var addUser = function(data){
 var SUITS = ["spades", "diamonds", "clubs", "hearts"];
 var VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
+var getValue = function(card){
+	if(card.value === "K"){
+		if(card.suit === "spades" || card.suit === "clubs")
+			return 30;
+		else
+			return -1;
+	} else if (card.value === "Q"){
+		return 12;
+	} else if (card.value === "J"){
+		return 11;
+	} else if (card.value === "A"){
+		return 1;
+	} else {
+		return parseInt(card.value);
+	}
+}
+
 var getDeck = function(){
-	var deck = new Array();
+	var deck = [];
 
 	for(var i = 0; i < SUITS.length; i++)
 	{
@@ -139,15 +156,32 @@ var getRandDeck = function () {
 //game deck and discard pile
 var deck;
 var discard;
-var orderedPlayers = new Array();
+var orderedPlayers;
+var playerHands;
+var inGame;
+var flushCalled;
 
 var newGame = function() {
+	//reset decks
 	deck = getRandDeck();
-	discard = new Array();
+	discard = [];
+	orderedPlayers = [];
+	playerHands = [];
+	inGame = true;
+	flushCalled = false;
+	//establish player order
 	for(var i in Player.list)
 		orderedPlayers.push(Player.list[i]);
-	
+	//deal cards
+	for(i = 0; i < orderedPlayers.length; i++) {
+		var player = orderedPlayers[i];
+		var cards = [];
+		for(j = 0; j < player.numCards; j++)
+			cards.push(deck.pop());
+		playerHands.push(cards);
+	}
 };
+
 
 
 var io = require('socket.io')(serv,{});
@@ -195,6 +229,10 @@ io.sockets.on('connection', function(socket){
 		console.log("Game Start");
 		newGame();
 	});
+	socket.on('randomPack', function() {
+		
+	})
+
 });
 
 
